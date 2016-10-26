@@ -1,0 +1,265 @@
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"><!-- BootStrap NavBar -->
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+	<h3><a class="brand" href="[% request.uri_base %]"><img src="images/dancer_man.png"> DNS modifyer</a></h3>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Main content -->
+
+
+<!-- HEADER line -->
+<div class="container">
+
+<div class="page-header">
+	<div class="row">
+		<div class="span12">
+			
+			<h1>내부 DNS 이용한 HOST 변경</h1>
+			
+		</div>
+	</div>
+</div>
+
+<div class="row">
+<form id="form1" name="form1" class="form-horizontal" method="post">
+		<div class="span12">
+
+<ul>		
+<li> 현재 DNS 정보 </li>
+ <div class="input_param_field">   
+<button type="button" class="btn btn-default btn-sm" id="add_param_button">
+<span class="glyphicon glyphicon glyphicon-plus" aria-hidden="true"></span> 
+Add HOST
+</button>
+ </div>
+
+<div class="controls">
+[% count=0 %]
+[% FOREACH infos IN dns_now %]
+[% count=count+1   %]
+
+<!--
+		<li> <input type="text" class="input-xlarge" id="host[% count %]" name="host[% count %]" value="[% infos.0 %]">  
+		<input type="text" class="input-xlarge" id="ip[% count %]" name="ip[% count %]" value="[% infos.1 %]"></li>		
+-->
+
+[% END %]
+	</div>
+		</div>
+	</ul>		
+	<div class="form-actions"> 
+		<button  onclick="save_jquery();" class="btn btn-primary">변경하기			 </button>
+<!-- 		<button type="submit" class="btn btn-primary">변경하기</button>  -->
+	</div> 	
+
+</div>
+</form>
+</div>
+
+<script>
+	var inputs_to_values = {
+        [% IF data.data_param_value %]
+        'data_param_value' : [% data.data_param_value %],
+        [% END %]
+    }
+
+   var adx = 0;
+    for (var name in inputs_to_values) {        
+
+        if ( name.indexOf("data_param_value") != -1 ) { //data_param_value array 처리
+            inputs_to_values[name].forEach(function(entry){
+             add_button_data("param",entry[0],entry[1]);
+            });
+        }else if ( name.indexOf("data_header_value") != -1 ) { //data_header_value array 처리
+            inputs_to_values[name].forEach(function(entry){
+             add_button_data("header",entry[0],entry[1]);
+            });
+        }
+        else{
+            $("#"+ name).val(inputs_to_values[name]);
+        }
+
+    }
+    
+   function add_button_data (obj,name,value){
+
+            var button_obj = obj;
+                        
+            var max_fields      = 10; //maximum input boxes allowed
+            var wrapper = $(".input_"+ obj+ "_field");
+                        
+            var remove_button = "remove_"+obj+"_button";
+            
+            var ad_set = 0;
+            if(adx < max_fields){ //max input box allowed
+                adx++; //text box increment
+                 $(wrapper).append(' <div><input type="text" placeholder="ipaddr'+adx+'" name="data_'+obj+'_name['+adx+']" value="'+ name +'"> \
+                                    <input type="text" placeholder="host'+adx+'" name="data_'+obj+'_value[]" value="'+ value +'">\
+                                    <button type="button" class="btn btn-default btn-sm" id="'+remove_button+'">\
+                                    <span class="glyphicon glyphicon glyphicon-remove" aria-hidden="true">\
+                                    </span></button> </div>'); //add input box
+            }
+        
+            $(wrapper).on("click","#remove_"+obj+"_button", function(e){ //user click on remove text
+//                 e.preventDefault(); 
+                $(this).parent('div').remove(); 
+    
+                if (adx != 0){
+                   adx--;
+                }
+    
+            })  
+
+    }
+    
+    var adx = 0; 
+        $("#add_param_button").click(function(e){
+    
+            var max_fields      = 10; //maximum input boxes allowed
+            var wrapper = $(".input_param_field");
+            var remove_button = "remove_param_button";
+            
+            var ad_set = 0;
+            if(adx < max_fields){ //max input box allowed
+                e.preventDefault();
+                adx++; //text box increment
+                 $(wrapper).append(' <div><input type="text" placeholder="ipaddr'+adx+'" name="data_param_name['+adx+']"> \
+                                    <input type="text" placeholder="host'+adx+'" name="data_param_value[]">\
+                                    <button type="button" class="btn btn-default btn-sm" id="'+remove_button+'">\
+                                    <span class="glyphicon glyphicon glyphicon-remove" aria-hidden="true">\
+                                    </span></button> </div>'); //add input box
+            }
+        
+            $(wrapper).on("click","#remove_param_button", function(e){ //user click on remove text
+                e.preventDefault(); 
+                $(this).parent('div').remove(); 
+    
+                if (adx != 0){
+                   adx--;
+                }
+    
+            })  
+        
+        });    
+
+ jQuery.fn.serializeObject = function() {
+
+    var obj = null;    
+    var header_array = new Array;
+    var param_array = new Array;
+    
+    
+    function createVariable(varName,varContent)
+    {
+      var scriptStr = "var "+varName+"= \""+varContent+"\""
+    
+      var node_scriptCode = document.createTextNode( scriptStr )
+      var node_script = document.createElement("script");
+      node_script.type = "text/javascript"
+      node_script.appendChild(node_scriptCode);
+    
+      var node_head = document.getElementsByTagName("head")[0]
+      node_head.appendChild(node_script);
+    }
+
+    function stringKey(key, value) {
+      var beginBracket = key.lastIndexOf('[');
+      if (beginBracket == -1) {
+        var hash = {};
+        hash[key] = value.trim();
+        return hash;
+      }
+      var newKey = key.substr(0, beginBracket);
+      var newValue = {};
+      newValue[key.substring(beginBracket + 1, key.length - 1)] = value.trim();
+      return stringKey(newKey, newValue);
+    }
+        
+    try {
+        // this[0].tagName이 form tag일 경우
+        if(this[0].tagName && this[0].tagName.toUpperCase() == "FORM" ) {
+        var arr = this.serializeArray();
+    if(arr){
+        obj = {};    
+        var pair  = 0;
+        var key   = "";
+        var value = "";
+
+        
+        jQuery.each(arr, function() {
+            // obj의 key값은 arr의 name, obj의 value는 value값
+            if (this.name.lastIndexOf('name') > 0){
+                key = this.value.trim();                
+            }
+            
+            if (this.name.lastIndexOf('[') > 0 ){
+           
+                if (key && this.name.lastIndexOf('value') > 0) {
+
+                    this.name = this.name.replace(/\[\]/, '');
+                    this.name = this.name.trim();
+                    
+                    if ( this.name.lastIndexOf('header') > 0  ) {
+                        header_array.push([key, this.value.trim()]);   
+
+                        obj[this.name] = header_array;          
+                    }  
+                    
+                    if ( this.name.lastIndexOf('param') > 0  ) {
+                        param_array.push([key, this.value.trim()]);   
+                        obj[this.name] = param_array;          
+                    }  
+                }                
+                console.log(obj);
+            }else{
+                 obj[this.name] = this.value.trim();                
+            }
+
+            });				
+        }
+       }
+    }catch(e) {
+        alert(e.message);
+    }finally  {}
+        return obj;
+    };
+            
+
+  function save_jquery() {
+    
+    	var formData = JSON.stringify($("#form1").serializeObject());
+//     	console.log(formData);
+    	
+    	$.ajax({
+    				type : "POST",
+    				url : "/modify",
+    				cache : false,
+    				data : formData,
+    				dataType:'json',
+    				success : function(result){console.log(result); window.location = "/";},
+    				error : onError,
+    				contentType: 'application/json'
+		});
+
+    }
+
+    function onError(request,data, status){
+        $('#return_body').html("<a color=red>에러발생 => </a>" + status);
+        
+        $('#return_result').html(jsonPrettyPrint.toHtml(request));
+        
+        
+        console.log("ajax error request : ");
+        console.log(request);
+        console.log("ajax error data : " + data);
+        console.log("ajax error status : " + status);
+   ;}
+
+        
+        	
+</script>
